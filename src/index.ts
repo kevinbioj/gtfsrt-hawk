@@ -92,6 +92,8 @@ async function updateGtfsRtEntries() {
       vehicle.ParcNumber
     );
 
+    if (Schedule === null) continue;
+
     const nextStops = Schedule.slice(
       Schedule.findIndex((s) => s.StopName === vehicle.NextStop)
     );
