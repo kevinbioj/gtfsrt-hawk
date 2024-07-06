@@ -131,10 +131,10 @@ async function updateGtfsRtEntries() {
 
     const now = dayjs().unix();
     const tripDescriptor = {
-      scheduleRelationship: "SCHEDULED" as const,
-      tripId: trip.id,
       routeId: trip.route.id,
       directionId: trip.direction,
+      tripId: trip.id,
+      scheduleRelationship: "SCHEDULED" as const,
     };
     const vehicleDescriptor = {
       id: vehicle.ParcNumber,
@@ -152,8 +152,6 @@ async function updateGtfsRtEntries() {
             stopSequence: nextStop.Rank,
           };
           return {
-            ...stopTimeDescriptor,
-            scheduleRelationship: "SCHEDULED" as const,
             ...(stopTime.sequence > 1
               ? {
                   arrival: {
@@ -168,6 +166,8 @@ async function updateGtfsRtEntries() {
                   },
                 }
               : {}),
+            ...stopTimeDescriptor,
+            scheduleRelationship: "SCHEDULED" as const,
           };
         }),
         timestamp: now,
@@ -175,18 +175,20 @@ async function updateGtfsRtEntries() {
         vehicle: vehicleDescriptor,
       },
     });
+    const nextStopSequence = nextStops.find(
+      (s) => s.StopGraphKey === nextStops.at(0)!.StopGraphKey
+    )!.Rank;
     vehiclePositions.set(`VM:${vehicle.ParcNumber}`, {
       id: `VM:${vehicle.ParcNumber}`,
       vehicle: {
         currentStatus: "IN_TRANSIT_TO",
-        currentStopSequence: nextStops.find(
-          (s) => s.StopGraphKey === nextStops.at(0)!.StopGraphKey
-        )!.Rank,
+        currentStopSequence: nextStopSequence,
         position: {
           latitude: +vehicle.Latitude,
           longitude: +vehicle.Longitude,
           bearing: vehicle.Angle,
         },
+        stopId: trip.stops.find((s) => s.sequence === nextStopSequence)?.stop.id,
         timestamp: now,
         trip: tripDescriptor,
         vehicle: vehicleDescriptor,
