@@ -1,20 +1,28 @@
 {
-  "name": "ubitransport-2-gtfsrt",
-  "module": "src/index.ts",
-  "type": "module",
-  "scripts": {
-    "start": "bun src/index.ts"
-  },
-  "devDependencies": {
-    "@types/bun": "latest"
-  },
-  "peerDependencies": {
-    "typescript": "^5.0.0"
-  },
-  "dependencies": {
-    "croner": "^8.0.1",
-    "dayjs": "^1.11.10",
-    "hono": "^4.2.3",
-    "protobufjs": "^7.2.6"
-  }
+	"name": "gtfsrt-hawk",
+	"description": "GTFS-RT data producer for Hawk-based networks",
+	"version": "0.1.0",
+	"main": "dist/index.js",
+	"type": "module",
+	"license": "MIT",
+	"author": "Kevin BIOJOUT <biojoutk1106@gmail.com>",
+	"scripts": {
+		"build": "tsc",
+		"start": "node dist/index.js",
+		"lint": "biome lint",
+		"format": "biome format --write"
+	},
+	"packageManager": "pnpm@10.14.0+sha512.ad27a79641b49c3e481a16a805baa71817a04bbe06a38d17e60e2eaee83f6a146c6a688125f5792e48dd5ba30e7da52a5cda4c3992b9ccf333f9ce223af84748",
+	"devDependencies": {
+		"@biomejs/biome": "2.1.4",
+		"@types/node": "^24.2.1",
+		"typescript": "^5.9.2"
+	},
+	"dependencies": {
+		"@hono/node-server": "^1.18.2",
+		"croner": "^9.1.0",
+		"dayjs": "^1.11.13",
+		"hono": "^4.9.1",
+		"protobufjs": "^7.5.3"
+	}
 }
