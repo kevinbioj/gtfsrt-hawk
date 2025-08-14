@@ -19,7 +19,6 @@ export type Stop = {
   id: string;
   code: string;
   name: string;
-  importId?: string;
 };
 
 export type StopTime = {

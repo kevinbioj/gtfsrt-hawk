@@ -96,7 +96,6 @@ async function loadStops(resourcePath: string) {
 			id: stop.stop_id,
 			code: stop.stop_code,
 			name: stop.stop_name,
-			importId: stop.import_id,
 		});
 		return stops;
 	}, new Map<string, Stop>());
