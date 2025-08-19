@@ -88,12 +88,12 @@ async function updateGtfsRtEntries() {
 		const nextStops = Schedule.slice(
 			Schedule.findIndex((s) => s.StopName === vehicle.NextStop),
 		);
-		const referenceTime = dayjs(nextStops.at(0)?.Schedule, "HH:mm");
+		const referenceTime = dayjs.tz(nextStops.at(0)?.Schedule, "HH:mm", 'Europe/Paris');
 
     const trip = workingTrips
       .filter(
         (t) =>
-          // t.route.name === vehicle.RouteNumber &&
+          t.route.name === vehicle.RouteNumber &&
           // Check for first stop
           t.stops.at(0)!.sequence === Schedule.at(0)!.Rank &&
           t.stops.at(0)!.stop.code === Schedule.at(0)!.StopGraphKey &&
@@ -146,14 +146,14 @@ async function updateGtfsRtEntries() {
 						...(stopTime.sequence > 1
 							? {
 									arrival: {
-										time: dayjs(nextStop.Schedule, "HH:mm").unix().toString(),
+										time: dayjs.tz(nextStop.Schedule, "HH:mm", 'Europe/Paris').unix().toString(),
 									},
 								}
 							: {}),
 						...(stopTime.sequence < trip.stops.length
 							? {
 									departure: {
-										time: dayjs(nextStop.Schedule, "HH:mm").unix().toString(),
+										time: dayjs.tz(nextStop.Schedule, "HH:mm", 'Europe/Paris').unix().toString(),
 									},
 								}
 							: {}),
