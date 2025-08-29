@@ -10,3 +10,15 @@ services:
     ports:
       - "127.0.0.1:50005:3000"
     restart: unless-stopped
+
+  amelys-producer:
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    container_name: gtfsrt-amelys
+    environment:
+      - "GTFS_RESOURCE_HREF=https://www.data.gouv.fr/api/1/datasets/r/c1c2e220-667c-4062-ba32-ec5079c55757"
+      - "HAWK_SLUG=montargis"
+    ports:
+      - "127.0.0.1:50007:3000"
+    restart: unless-stopped
