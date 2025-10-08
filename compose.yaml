@@ -22,3 +22,15 @@ services:
     ports:
       - "127.0.0.1:50007:3000"
     restart: unless-stopped
+
+  chateauroux-producer:
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    container_name: gtfsrt-chateauroux
+    environment:
+      - "GTFS_RESOURCE_HREF=https://data.chateauroux-metropole.fr/api/v2/catalog/datasets/reseau-de-bus-urbain_horizon/alternative_exports/gtfs_20251001_zip"
+      - "HAWK_SLUG=chateauroux"
+    ports:
+      - "127.0.0.1:50010:3000"
+    restart: unless-stopped

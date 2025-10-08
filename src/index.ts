@@ -90,35 +90,35 @@ async function updateGtfsRtEntries() {
 		);
 		const referenceTime = dayjs.tz(nextStops.at(0)?.Schedule, "HH:mm", 'Europe/Paris');
 
-    const trip = workingTrips
-      .filter(
-        (t) =>
-          t.route.name === vehicle.RouteNumber &&
-          // Check for first stop
-          t.stops.at(0)!.sequence === Schedule.at(0)!.Rank &&
-          t.stops.at(0)!.stop.code === Schedule.at(0)!.StopGraphKey &&
-          // Check for last stop
-          t.stops.at(-1)!.sequence === Schedule.at(-1)!.Rank &&
-          t.stops.at(-1)!.stop.code === Schedule.at(-1)!.StopGraphKey &&
-          // Check if next stop exists
-          t.stops.some((s) => s.stop.code === nextStops.at(0)?.StopGraphKey)
-      )
-      .sort((a, b) => {
-        const aStopTime = parseTime(
-          a.stops.find((s) => s.stop.code === nextStops.at(0)!.StopGraphKey)!
-            .time
-        );
-        const bStopTime = parseTime(
-          b.stops.find((s) => s.stop.code === nextStops.at(0)!.StopGraphKey)!
-            .time
-        );
-        return (
-          Math.abs(referenceTime.diff(aStopTime)) -
-          Math.abs(referenceTime.diff(bStopTime))
-        );
-      })
-      .at(0);
-    if (typeof trip === "undefined") continue;
+		const trip = workingTrips
+		.filter(
+			(t) =>
+			t.route.name === vehicle.RouteNumber &&
+			// Check for first stop
+			t.stops.at(0)!.sequence === Schedule.at(0)!.Rank &&
+			[t.stops.at(0)!.stop.code, t.stops.at(0)!.stop.id].includes(Schedule.at(0)!.StopGraphKey) &&
+			// Check for last stop
+			t.stops.at(-1)!.sequence === Schedule.at(-1)!.Rank &&
+			[t.stops.at(-1)!.stop.code, t.stops.at(-1)!.stop.id].includes(Schedule.at(-1)!.StopGraphKey) &&
+			// Check if next stop exists
+			t.stops.some((s) => [s.stop.code, s.stop.id].includes(nextStops.at(0)?.StopGraphKey))
+		)
+		.sort((a, b) => {
+			const aStopTime = parseTime(
+			a.stops.find((s) => [s.stop.code, s.stop.id].includes(nextStops.at(0)!.StopGraphKey)!)
+				.time
+			);
+			const bStopTime = parseTime(
+			b.stops.find((s) => [s.stop.code, s.stop.id].includes(nextStops.at(0)!.StopGraphKey)!)
+				.time
+			);
+			return (
+			Math.abs(referenceTime.diff(aStopTime)) -
+			Math.abs(referenceTime.diff(bStopTime))
+			);
+		})
+		.at(0);
+		if (typeof trip === "undefined") continue;
 
 		const now = dayjs().unix();
 		const tripDescriptor = {
@@ -177,7 +177,7 @@ async function updateGtfsRtEntries() {
 				position: {
 					latitude: +vehicle.Latitude,
 					longitude: +vehicle.Longitude,
-					bearing: vehicle.Angle,
+					bearing: -vehicle.Angle,
 				},
 				stopId: trip.stops.find((s) => s.sequence === nextStopSequence)?.stop
 					.id,
