@@ -180,10 +180,15 @@ while (true) {
 		};
 
 		tripUpdates.set(plausibleTrip.id, {
-			stopTimeUpdate: nextStops.map((nextStop) => {
+			stopTimeUpdate: nextStops.flatMap((nextStop) => {
 				const gtfsStopTime = plausibleTrip.stopTimes.find((stopTime) =>
 					matchStopTime(stopTime, nextStop),
-				)!;
+				);
+
+				if (gtfsStopTime === undefined) {
+					return [];
+				}
+
 				const stopTimeDescriptor = {
 					stopId: gtfsStopTime.stop.id,
 					stopSequence: gtfsStopTime.sequence,
