@@ -22,7 +22,7 @@ ENV NODE_ENV=production
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/dist/ ./dist
 
-COPY ./assets ./assets
+COPY ./configurations ./configurations
 
 EXPOSE 3000
 CMD ["node", "/app/dist/index.js"]

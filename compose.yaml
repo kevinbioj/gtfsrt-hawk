@@ -5,8 +5,7 @@ services:
       dockerfile: ./Dockerfile
     container_name: gtfsrt-ficibus
     environment:
-      - "GTFS_RESOURCE_HREF=https://api.atm.cityway.fr/dataflow/offre-tc/download?provider=FICIBUS&dataFormat=GTFS"
-      - "HAWK_SLUG=ficibus"
+      - "CONFIGURATION_PATH=/app/configurations/fecamp.mjs"
     ports:
       - "127.0.0.1:50005:3000"
     restart: unless-stopped
@@ -17,8 +16,7 @@ services:
       dockerfile: ./Dockerfile
     container_name: gtfsrt-amelys
     environment:
-      - "GTFS_RESOURCE_HREF=https://www.data.gouv.fr/api/1/datasets/r/39240e80-d3f4-4702-ba93-520fae414649"
-      - "HAWK_SLUG=montargis"
+      - "CONFIGURATION_PATH=/app/configurations/montargis.mjs"
     ports:
       - "127.0.0.1:50007:3000"
     restart: unless-stopped
@@ -29,8 +27,18 @@ services:
       dockerfile: ./Dockerfile
     container_name: gtfsrt-chateauroux
     environment:
-      - "GTFS_RESOURCE_HREF=https://data.chateauroux-metropole.fr/api/v2/catalog/datasets/reseau-de-bus-urbain_horizon/alternative_exports/gtfs_20251001_zip"
-      - "HAWK_SLUG=chateauroux"
+      - "CONFIGURATION_PATH=/app/configurations/chateauroux.mjs"
     ports:
       - "127.0.0.1:50010:3000"
+    restart: unless-stopped
+
+  niort-producer:
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    container_name: gtfsrt-niort
+    environment:
+      - "CONFIGURATION_PATH=/app/configurations/niort.mjs"
+    ports:
+      - "127.0.0.1:50011:3000"
     restart: unless-stopped

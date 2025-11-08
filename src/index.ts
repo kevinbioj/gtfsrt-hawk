@@ -1,210 +1,237 @@
+import { setTimeout } from "node:timers/promises";
 import { serve } from "@hono/node-server";
-import { Cron } from "croner";
-import dayjs from "dayjs";
+import DraftLog from "draftlog";
+import GtfsRealtime from "gtfs-realtime-bindings";
 import { Hono } from "hono";
 import { stream } from "hono/streaming";
+import { Temporal } from "temporal-polyfill";
 
-import { downloadStaticResource } from "./gtfs/download-resource.js";
-import { encodePayload } from "./gtfs/encode-payload.js";
-import type {
-	Trip,
-	TripUpdateEntity,
-	VehiclePositionEntity,
-} from "./gtfs/types.js";
-import { wrapEntities } from "./gtfs/wrap-entities.js";
-import { downloadHawkTripDetails, downloadHawkVehicles } from "./hawk/index.js";
-import { checkCalendar } from "./utils/check-calendar.js";
-import { parseTime } from "./utils/parse-time.js";
+import { loadConfiguration } from "./configuration/load-configuration.js";
+import { loadGtfs } from "./gtfs/load-gtfs.js";
+import { doesServiceRunOn } from "./gtfs/utils.js";
+import { createGtfsRtFeed } from "./gtfs-rt/create-feed.js";
+import { downloadHawkTripDetails } from "./hawk/download-trip-details.js";
+import { downloadHawkVehicles } from "./hawk/download-vehicles.js";
+import { configurationPath } from "./options.js";
 
-if (typeof process.env.GTFS_RESOURCE_HREF === "undefined") {
-	throw new Error(
-		"Expected 'GTFS_RESOURCE_HREF' environment variable to be set!",
+DraftLog(console, !process.stdout.isTTY)?.addLineListener(process.stdin);
+
+console.log(`  ___      _    _ _      _  _             _     ___                                
+ | _ \\_  _| |__| (_)__  | || |__ ___ __ _| |__ | _ \\_ _ ___  __ ___ ______ ___ _ _ 
+ |  _/ || | '_ \\ | / _| | __ / _\` \\ V  V / / / |  _/ '_/ _ \\/ _/ -_|_-<_-</ _ \\ '_|
+ |_|  \\_,_|_.__/_|_\\__| |_||_\\__,_|\\_/\\_/|_\\_\\ |_| |_| \\___/\\__\\___/__/__/\\___/_|  `);
+console.log();
+
+const envAwareConfigurationPath = configurationPath ?? process.env.CONFIGURATION_PATH;
+if (envAwareConfigurationPath === undefined) {
+	console.error("Usage: hawk-public-processor [configuration path]");
+	console.error(
+		"Configuration path can also be set using the 'CONFIGURATION_ENV' environment variable.",
 	);
+	process.exit(1);
 }
 
-if (typeof process.env.HAWK_SLUG === "undefined") {
-	throw new Error("Expected 'HAWK_SLUG' environment variable to be set!");
-}
+const { gtfsResourceHref, hawkId, refreshInterval, matchRoute, matchStopTime } =
+	await loadConfiguration(envAwareConfigurationPath);
 
-let resource: Trip[] | null = null;
-const tripUpdates = new Map<string, TripUpdateEntity>();
-const vehiclePositions = new Map<string, VehiclePositionEntity>();
+//- Stores initialization
 
-console.log("-- HAWK 2 GTFS-RT --");
-await updateGtfsResource();
-await updateGtfsRtEntries();
+const tripUpdates = new Map<string, GtfsRealtime.transit_realtime.ITripUpdate>();
+const vehiclePositions = new Map<string, GtfsRealtime.transit_realtime.IVehiclePosition>();
 
-new Cron("0 0 * * * *", updateGtfsResource);
-new Cron("0,30 * * * * *", updateGtfsRtEntries);
-new Cron("0 * * * * *", sweepEntries);
+setInterval(() => {
+	const now = Temporal.Now.instant();
 
-const app = new Hono();
-app.get("/trip-updates", (c) =>
-	stream(c, async (stream) => {
-		await stream.write(encodePayload(wrapEntities([...tripUpdates.values()])));
-	}),
-);
-app.get("/vehicle-positions", (c) =>
-	stream(c, async (stream) => {
-		await stream.write(
-			encodePayload(wrapEntities([...vehiclePositions.values()])),
-		);
-	}),
-);
+	tripUpdates.entries().forEach(([key, tripUpdate]) => {
+		if (
+			now
+				.since(Temporal.Instant.fromEpochMilliseconds(+tripUpdate.timestamp! * 1000))
+				.total("minutes") >= 10
+		) {
+			tripUpdates.delete(key);
+		}
+	});
 
-app.get("/trip-updates.json", (c) =>
-	c.json(wrapEntities([...tripUpdates.values()])),
-);
-app.get("/vehicle-positions.json", (c) =>
-	c.json(wrapEntities([...vehiclePositions.values()])),
-);
+	vehiclePositions.entries().forEach(([key, vehiclePosition]) => {
+		if (
+			now
+				.since(Temporal.Instant.fromEpochMilliseconds(+vehiclePosition.timestamp! * 1000))
+				.total("minutes") >= 10
+		) {
+			vehiclePositions.delete(key);
+		}
+	});
+}, 120_000);
 
-serve({
-	fetch: app.fetch,
-	port: +(process.env.PORT ?? 3000),
+//- Web server initialization
+
+const hono = new Hono();
+hono.get("/trip-updates", (c) => {
+	const feed = createGtfsRtFeed(tripUpdates.values());
+	return stream(c, async (s) => {
+		const encodedFeed = GtfsRealtime.transit_realtime.FeedMessage.encode(feed).finish();
+		await s.write(encodedFeed);
+	});
+});
+hono.get("/trip-updates.json", (c) => {
+	const feed = createGtfsRtFeed(tripUpdates.values());
+	return c.json(feed, 200);
 });
 
-// ---
+hono.get("/vehicle-positions", (c) => {
+	const feed = createGtfsRtFeed(vehiclePositions.values());
+	return stream(c, async (s) => {
+		const encodedFeed = GtfsRealtime.transit_realtime.FeedMessage.encode(feed).finish();
+		await s.write(encodedFeed);
+	});
+});
+hono.get("/vehicle-positions.json", (c) => {
+	const feed = createGtfsRtFeed(vehiclePositions.values());
+	return c.json(feed, 200);
+});
 
-async function updateGtfsResource() {
-	const r = await downloadStaticResource(process.env.GTFS_RESOURCE_HREF);
-	resource = r;
-	console.log(`Updated GTFS resource at '${new Date().toISOString()}'`);
-}
+const port = +(process.env.PORT ?? 3000);
+serve({ fetch: hono.fetch, port });
+console.log(`🌍 Listening on port ${port}.`);
 
-async function updateGtfsRtEntries() {
-	if (resource === null) return;
-	const vehicles = await downloadHawkVehicles(process.env.HAWK_SLUG);
-	const workingTrips = resource.filter((trip) => checkCalendar(trip.calendar));
+//- Main program
+
+console.log(`🔄 Loading GTFS resource at '${gtfsResourceHref}'.`);
+const gtfs = await loadGtfs(hawkId, gtfsResourceHref);
+
+while (true) {
+	const then = Temporal.Now.instant().epochMilliseconds;
+
+	const today = Temporal.Now.plainDateISO();
+	const todayTrips = gtfs.trips
+		.values()
+		.filter((trip) => doesServiceRunOn(trip.service, today))
+		.toArray();
+
+	console.log("🚍 Fetching live vehicles from Hawk.");
+	const vehicles = await downloadHawkVehicles(hawkId);
 
 	for (const vehicle of vehicles) {
-		const { Schedule } = await downloadHawkTripDetails(
-			process.env.HAWK_SLUG,
-			vehicle.ParcNumber,
-		);
+		console.log(`\tProcessing vehicle '${vehicle.ParcNumber}'.`);
+		const { Schedule: schedule } = await downloadHawkTripDetails(hawkId, vehicle.ParcNumber);
+		if (schedule === null) {
+			console.warn(`\t\tNo schedule information available, ignoring.`);
+			continue;
+		}
 
-		if (Schedule === null) continue;
+		const nextStops = schedule.slice(schedule.findIndex((s) => s.StopName === vehicle.NextStop));
+		const referenceTime = nextStops.at(0)
+			? Temporal.PlainTime.from(`${nextStops.at(0)!.Schedule}:00`)
+			: null;
 
-		const nextStops = Schedule.slice(
-			Schedule.findIndex((s) => s.StopName === vehicle.NextStop),
-		);
-		const referenceTime = dayjs.tz(nextStops.at(0)?.Schedule, "HH:mm", 'Europe/Paris');
+		if (referenceTime === null) {
+			console.warn(`\t\tCould not compute reference time, ignoring.`);
+			continue;
+		}
 
-		const trip = workingTrips
-		.filter(
-			(t) =>
-			t.route.name === vehicle.RouteNumber &&
-			// Check for first stop
-			t.stops.at(0)!.sequence === Schedule.at(0)!.Rank &&
-			[t.stops.at(0)!.stop.code, t.stops.at(0)!.stop.id].includes(Schedule.at(0)!.StopGraphKey) &&
-			// Check for last stop
-			t.stops.at(-1)!.sequence === Schedule.at(-1)!.Rank &&
-			[t.stops.at(-1)!.stop.code, t.stops.at(-1)!.stop.id].includes(Schedule.at(-1)!.StopGraphKey) &&
-			// Check if next stop exists
-			t.stops.some((s) => [s.stop.code, s.stop.id].includes(nextStops.at(0)?.StopGraphKey))
-		)
-		.sort((a, b) => {
-			const aStopTime = parseTime(
-			a.stops.find((s) => [s.stop.code, s.stop.id].includes(nextStops.at(0)!.StopGraphKey)!)
-				.time
-			);
-			const bStopTime = parseTime(
-			b.stops.find((s) => [s.stop.code, s.stop.id].includes(nextStops.at(0)!.StopGraphKey)!)
-				.time
-			);
-			return (
-			Math.abs(referenceTime.diff(aStopTime)) -
-			Math.abs(referenceTime.diff(bStopTime))
-			);
-		})
-		.at(0);
-		if (typeof trip === "undefined") continue;
+		const plausibleTrip = todayTrips
+			.filter((trip) => {
+				if (!matchRoute(trip.route, vehicle, schedule)) {
+					return false;
+				}
 
-		const now = dayjs().unix();
-		const tripDescriptor = {
-			routeId: trip.route.id,
-			directionId: trip.direction,
-			tripId: trip.id,
-			scheduleRelationship: "SCHEDULED" as const,
+				if (!matchStopTime(trip.stopTimes.at(0)!, schedule.at(0)!)) {
+					return false;
+				}
+
+				if (!matchStopTime(trip.stopTimes.at(-1)!, schedule.at(-1)!)) {
+					return false;
+				}
+
+				return trip.stopTimes.some((stopTime) => matchStopTime(stopTime, nextStops.at(0)!));
+			})
+			.sort((a, b) => {
+				const aStopTime = Temporal.PlainTime.from(
+					a.stopTimes.find((stopTime) => matchStopTime(stopTime, nextStops[0]!))!.time,
+				);
+
+				const bStopTime = Temporal.PlainTime.from(
+					b.stopTimes.find((stopTime) => matchStopTime(stopTime, nextStops[0]!))!.time,
+				);
+
+				return (
+					referenceTime.since(aStopTime).total("seconds") -
+					referenceTime.since(bStopTime).total("seconds")
+				);
+			})
+			.at(0);
+
+		if (plausibleTrip === undefined) {
+			console.warn(`\t\tDid not find any plausible trip, ignoring.`);
+			continue;
+		}
+
+		const tripDescriptor: GtfsRealtime.transit_realtime.ITripDescriptor = {
+			tripId: plausibleTrip.id,
+			routeId: plausibleTrip.route.id,
+			directionId: plausibleTrip.directionId,
+			scheduleRelationship:
+				GtfsRealtime.transit_realtime.TripDescriptor.ScheduleRelationship.SCHEDULED,
 		};
-		const vehicleDescriptor = {
+
+		const vehicleDescriptor: GtfsRealtime.transit_realtime.IVehicleDescriptor = {
 			id: vehicle.ParcNumber,
 			label: vehicle.ParcNumber,
 		};
-		tripUpdates.set(`SM:${trip.id}`, {
-			id: `SM:${trip.id}`,
-			tripUpdate: {
-				stopTimeUpdate: nextStops.map((nextStop) => {
-					const stopTime = trip.stops.find(
-						(s) => s.sequence === nextStop.Rank,
-					)!;
-					const stopTimeDescriptor = {
-						stopId: stopTime.stop.id,
-						stopSequence: nextStop.Rank,
-					};
-					return {
-						...(stopTime.sequence > 1
-							? {
-									arrival: {
-										time: dayjs.tz(nextStop.Schedule, "HH:mm", 'Europe/Paris').unix().toString(),
-									},
-								}
-							: {}),
-						...(stopTime.sequence < trip.stops.length
-							? {
-									departure: {
-										time: dayjs.tz(nextStop.Schedule, "HH:mm", 'Europe/Paris').unix().toString(),
-									},
-								}
-							: {}),
-						...stopTimeDescriptor,
-						scheduleRelationship: "SCHEDULED" as const,
-					};
-				}),
-				timestamp: now,
-				trip: tripDescriptor,
-				vehicle: vehicleDescriptor,
-			},
+
+		tripUpdates.set(plausibleTrip.id, {
+			stopTimeUpdate: nextStops.map((nextStop) => {
+				const gtfsStopTime = plausibleTrip.stopTimes.find((stopTime) =>
+					matchStopTime(stopTime, nextStop),
+				)!;
+				const stopTimeDescriptor = {
+					stopId: gtfsStopTime.stop.id,
+					stopSequence: gtfsStopTime.sequence,
+				} as const;
+
+				const scheduledAt = Math.floor(
+					Temporal.Now.zonedDateTimeISO().withPlainTime(
+						Temporal.PlainTime.from(`${nextStop.Schedule}:00`),
+					).epochMilliseconds / 1000,
+				);
+
+				return {
+					...(gtfsStopTime.sequence > 1
+						? {
+								arrival: {
+									time: scheduledAt,
+								},
+							}
+						: {}),
+					...(gtfsStopTime.sequence < plausibleTrip.stopTimes.length
+						? {
+								departure: {
+									time: scheduledAt,
+								},
+							}
+						: {}),
+					...stopTimeDescriptor,
+					scheduleRelationship:
+						GtfsRealtime.transit_realtime.TripUpdate.StopTimeUpdate.ScheduleRelationship.SCHEDULED,
+				};
+			}),
+			timestamp: Math.floor(then / 1000),
+			trip: tripDescriptor,
 		});
-		const nextStopSequence = nextStops.find(
-			(s) => s.StopGraphKey === nextStops.at(0)!.StopGraphKey,
-		)!.Rank;
-		vehiclePositions.set(`VM:${vehicle.ParcNumber}`, {
-			id: `VM:${vehicle.ParcNumber}`,
-			vehicle: {
-				currentStatus: "IN_TRANSIT_TO",
-				currentStopSequence: nextStopSequence,
-				position: {
-					latitude: +vehicle.Latitude,
-					longitude: +vehicle.Longitude,
-					bearing: -vehicle.Angle,
-				},
-				stopId: trip.stops.find((s) => s.sequence === nextStopSequence)?.stop
-					.id,
-				timestamp: now,
-				trip: tripDescriptor,
-				vehicle: vehicleDescriptor,
+
+		vehiclePositions.set(vehicle.ParcNumber, {
+			position: {
+				latitude: +vehicle.Latitude,
+				longitude: +vehicle.Longitude,
 			},
+			timestamp: Math.floor(then / 1000),
+			trip: tripDescriptor,
+			vehicle: vehicleDescriptor,
 		});
 	}
-	console.log(`Updated GTFS-RT entries at '${new Date().toISOString()}'`);
-}
 
-function sweepEntries() {
-	tripUpdates.forEach((tripUpdate) => {
-		if (
-			dayjs().diff(dayjs.unix(tripUpdate.tripUpdate.timestamp), "minutes") >= 10
-		) {
-			tripUpdates.delete(tripUpdate.id);
-		}
-	});
-	vehiclePositions.forEach((vehiclePosition) => {
-		if (
-			dayjs().diff(dayjs.unix(vehiclePosition.vehicle.timestamp), "minutes") >=
-			10
-		) {
-			vehiclePositions.delete(vehiclePosition.id);
-		}
-	});
-	console.log(`Swept outdated entries at '${new Date().toISOString()}'`);
+	const now = Temporal.Now.instant().epochMilliseconds;
+	const waitingTime = Math.max(0, refreshInterval - (now - then));
+	console.log(`✅ Done! Next round in ${waitingTime}ms`);
+	await setTimeout(waitingTime);
 }
