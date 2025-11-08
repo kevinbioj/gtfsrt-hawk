@@ -13,6 +13,7 @@ import { createGtfsRtFeed } from "./gtfs-rt/create-feed.js";
 import { downloadHawkTripDetails } from "./hawk/download-trip-details.js";
 import { downloadHawkVehicles } from "./hawk/download-vehicles.js";
 import { configurationPath } from "./options.js";
+import { TIMEZONE } from "./constants.js";
 
 DraftLog(console, !process.stdout.isTTY)?.addLineListener(process.stdin);
 
@@ -195,7 +196,7 @@ while (true) {
 				} as const;
 
 				const scheduledAt = Math.floor(
-					Temporal.Now.zonedDateTimeISO().withPlainTime(
+					Temporal.Now.zonedDateTimeISO(TIMEZONE).withPlainTime(
 						Temporal.PlainTime.from(`${nextStop.Schedule}:00`),
 					).epochMilliseconds / 1000,
 				);
