@@ -42,3 +42,14 @@ services:
     ports:
       - "127.0.0.1:50011:3000"
     restart: unless-stopped
+
+  dreux-producer:
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    container_name: gtfsrt-dreux
+    environment:
+      - "CONFIGURATION_PATH=/app/configurations/dreux.mjs"
+    ports:
+      - "127.0.0.1:50012:3000"
+    restart: unless-stopped
