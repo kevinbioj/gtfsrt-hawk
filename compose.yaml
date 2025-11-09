@@ -53,3 +53,14 @@ services:
     ports:
       - "127.0.0.1:50012:3000"
     restart: unless-stopped
+
+  vichy-producer:
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    container_name: gtfsrt-vichy
+    environment:
+      - "CONFIGURATION_PATH=/app/configurations/vichy.mjs"
+    ports:
+      - "127.0.0.1:50013:3000"
+    restart: unless-stopped
