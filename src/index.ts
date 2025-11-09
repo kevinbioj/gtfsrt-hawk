@@ -156,8 +156,8 @@ while (true) {
 				);
 
 				return (
-					referenceTime.since(aStopTime).total("seconds") -
-					referenceTime.since(bStopTime).total("seconds")
+					Math.abs(referenceTime.since(aStopTime).total("seconds")) -
+					Math.abs(referenceTime.since(bStopTime).total("seconds"))
 				);
 			})
 			.at(0);
