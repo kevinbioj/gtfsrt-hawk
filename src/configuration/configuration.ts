@@ -15,7 +15,7 @@ export type Configuration = {
 	) => boolean;
 	matchStopTime: (
 		gtfsStopTime: StopTime,
-		hawkSchedule: HawkTripDetails["Schedule"][number],
+		hawkSchedule?: HawkTripDetails["Schedule"][number],
 	) => boolean;
 	matchTrip: (
 		gtfsTrip: Trip,

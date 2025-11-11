@@ -6,6 +6,7 @@ export type HawkTripDetails = {
 		StopName: string;
 		StopGraphKey: string;
 		Schedule: string;
+		State: "Real" | "Estimated";
 	}>;
 };
 

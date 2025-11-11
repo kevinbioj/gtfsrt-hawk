@@ -5,7 +5,9 @@ export type HawkVehicle = {
 	RouteNumber: string;
 	Longitude: string;
 	Latitude: string;
+	Angle: number;
 	NextStop: string;
+	DestinationName: string;
 };
 
 export async function downloadHawkVehicles(hawkId: string) {

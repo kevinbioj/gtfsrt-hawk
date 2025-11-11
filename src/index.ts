@@ -177,7 +177,7 @@ while (true) {
 
 		const vehicleDescriptor: GtfsRealtime.transit_realtime.IVehicleDescriptor = {
 			id: vehicle.ParcNumber,
-			label: vehicle.ParcNumber,
+			label: vehicle.DestinationName,
 		};
 
 		tripUpdates.set(plausibleTrip.id, {
@@ -225,11 +225,24 @@ while (true) {
 			trip: tripDescriptor,
 		});
 
+		const currentStop = plausibleTrip.stopTimes.find((stopTime) =>
+			matchStopTime(
+				stopTime,
+				schedule.find((s) => s.State === "Estimated"),
+			),
+		);
+
 		vehiclePositions.set(vehicle.ParcNumber, {
+			currentStatus: currentStop
+				? GtfsRealtime.transit_realtime.VehiclePosition.VehicleStopStatus.IN_TRANSIT_TO
+				: undefined,
+			currentStopSequence: currentStop?.sequence,
 			position: {
 				latitude: +vehicle.Latitude,
 				longitude: +vehicle.Longitude,
+				bearing: (270 + vehicle.Angle) % 360,
 			},
+			stopId: currentStop?.stop.id,
 			timestamp: Math.floor(then / 1000),
 			trip: tripDescriptor,
 			vehicle: vehicleDescriptor,
