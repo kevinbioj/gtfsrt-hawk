@@ -120,7 +120,7 @@ while (true) {
 			continue;
 		}
 
-		const nextStops = schedule.slice(schedule.findIndex((s) => s.StopName === vehicle.NextStop));
+		const nextStops = schedule.slice(schedule.findIndex((s) => s.State === "Estimated"));
 		const referenceTime = nextStops.at(0)
 			? Temporal.PlainTime.from(`${nextStops.at(0)!.Schedule}:00`)
 			: null;
