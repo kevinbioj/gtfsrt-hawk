@@ -5,7 +5,7 @@ const configuration = {
 	refreshInterval: 30_000,
 	matchRoute: (gtfsRoute, hawkVehicle) => gtfsRoute.name === hawkVehicle.RouteNumber,
 	matchStopTime: (gtfsStopTime, hawkSchedule) =>
-		gtfsStopTime.stop.code === hawkSchedule.StopGraphKey,
+		gtfsStopTime.stop.code === hawkSchedule?.StopGraphKey,
 };
 
 export default configuration;
