@@ -181,7 +181,7 @@ while (true) {
 		};
 
 		tripUpdates.set(plausibleTrip.id, {
-			stopTimeUpdate: nextStops.flatMap((nextStop) => {
+			stopTimeUpdate: schedule.flatMap((nextStop) => {
 				const gtfsStopTime = plausibleTrip.stopTimes.find((stopTime) =>
 					matchStopTime(stopTime, nextStop),
 				);
