@@ -223,6 +223,7 @@ while (true) {
 			}),
 			timestamp: Math.floor(then / 1000),
 			trip: tripDescriptor,
+			vehicle: vehicleDescriptor,
 		});
 
 		const currentStop = plausibleTrip.stopTimes.find((stopTime) =>
