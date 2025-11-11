@@ -6,7 +6,7 @@ export function createGtfsRtFeed(
 		GtfsRealtime.transit_realtime.ITripUpdate | GtfsRealtime.transit_realtime.IVehiclePosition
 	>,
 ) {
-	return {
+	return GtfsRealtime.transit_realtime.FeedMessage.create({
 		header: {
 			gtfsRealtimeVersion: "2.0",
 			incrementality: GtfsRealtime.transit_realtime.FeedHeader.Incrementality.FULL_DATASET,
@@ -21,5 +21,5 @@ export function createGtfsRtFeed(
 				return { id, vehicle: entity as GtfsRealtime.transit_realtime.IVehiclePosition };
 			})
 			.toArray(),
-	} satisfies GtfsRealtime.transit_realtime.IFeedMessage;
+	});
 }

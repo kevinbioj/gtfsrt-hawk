@@ -14,6 +14,7 @@ import { downloadHawkTripDetails } from "./hawk/download-trip-details.js";
 import { downloadHawkVehicles } from "./hawk/download-vehicles.js";
 import { configurationPath } from "./options.js";
 import { TIMEZONE } from "./constants.js";
+import { feedToJson } from "./gtfs-rt/feed-to-json.js";
 
 DraftLog(console, !process.stdout.isTTY)?.addLineListener(process.stdin);
 
@@ -76,7 +77,7 @@ hono.get("/trip-updates", (c) => {
 });
 hono.get("/trip-updates.json", (c) => {
 	const feed = createGtfsRtFeed(tripUpdates.values());
-	return c.json(feed, 200);
+	return c.json(feedToJson(feed), 200);
 });
 
 hono.get("/vehicle-positions", (c) => {
@@ -88,7 +89,7 @@ hono.get("/vehicle-positions", (c) => {
 });
 hono.get("/vehicle-positions.json", (c) => {
 	const feed = createGtfsRtFeed(vehiclePositions.values());
-	return c.json(feed, 200);
+	return c.json(feedToJson(feed), 200);
 });
 
 const port = +(process.env.PORT ?? 3000);
