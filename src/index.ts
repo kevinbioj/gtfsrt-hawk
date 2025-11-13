@@ -164,70 +164,74 @@ while (true) {
 			.at(0);
 
 		if (plausibleTrip === undefined) {
-			console.warn(`\t\tDid not find any plausible trip, ignoring.`);
-			continue;
+			console.warn(`\t\tDid not find any plausible trip, publishing vehicle as non-commercial.`);
 		}
 
-		const tripDescriptor: GtfsRealtime.transit_realtime.ITripDescriptor = {
-			tripId: plausibleTrip.id,
-			routeId: plausibleTrip.route.id,
-			directionId: plausibleTrip.directionId,
-			scheduleRelationship:
-				GtfsRealtime.transit_realtime.TripDescriptor.ScheduleRelationship.SCHEDULED,
-		};
+		const tripDescriptor: GtfsRealtime.transit_realtime.ITripDescriptor | undefined = plausibleTrip
+			? {
+					tripId: plausibleTrip.id,
+					routeId: plausibleTrip.route.id,
+					directionId: plausibleTrip.directionId,
+					scheduleRelationship:
+						GtfsRealtime.transit_realtime.TripDescriptor.ScheduleRelationship.SCHEDULED,
+				}
+			: undefined;
 
 		const vehicleDescriptor: GtfsRealtime.transit_realtime.IVehicleDescriptor = {
 			id: vehicle.ParcNumber,
 			label: vehicle.DestinationName,
 		};
 
-		tripUpdates.set(plausibleTrip.id, {
-			stopTimeUpdate: schedule.flatMap((nextStop) => {
-				const gtfsStopTime = plausibleTrip.stopTimes.find((stopTime) =>
-					matchStopTime(stopTime, nextStop),
-				);
+		if (plausibleTrip !== undefined) {
+			tripUpdates.set(plausibleTrip.id, {
+				stopTimeUpdate: schedule.flatMap((nextStop) => {
+					const gtfsStopTime = plausibleTrip.stopTimes.find((stopTime) =>
+						matchStopTime(stopTime, nextStop),
+					);
 
-				if (gtfsStopTime === undefined) {
-					return [];
-				}
+					if (gtfsStopTime === undefined) {
+						return [];
+					}
 
-				const stopTimeDescriptor = {
-					stopId: gtfsStopTime.stop.id,
-					stopSequence: gtfsStopTime.sequence,
-				} as const;
+					const stopTimeDescriptor = {
+						stopId: gtfsStopTime.stop.id,
+						stopSequence: gtfsStopTime.sequence,
+					} as const;
 
-				const scheduledAt = Math.floor(
-					Temporal.Now.zonedDateTimeISO(TIMEZONE).withPlainTime(
-						Temporal.PlainTime.from(`${nextStop.Schedule}:00`),
-					).epochMilliseconds / 1000,
-				);
+					const scheduledAt = Math.floor(
+						Temporal.Now.zonedDateTimeISO(TIMEZONE).withPlainTime(
+							Temporal.PlainTime.from(`${nextStop.Schedule}:00`),
+						).epochMilliseconds / 1000,
+					);
 
-				return {
-					...(gtfsStopTime.sequence > 1
-						? {
-								arrival: {
-									time: scheduledAt,
-								},
-							}
-						: {}),
-					...(gtfsStopTime.sequence < plausibleTrip.stopTimes.length
-						? {
-								departure: {
-									time: scheduledAt,
-								},
-							}
-						: {}),
-					...stopTimeDescriptor,
-					scheduleRelationship:
-						GtfsRealtime.transit_realtime.TripUpdate.StopTimeUpdate.ScheduleRelationship.SCHEDULED,
-				};
-			}),
-			timestamp: Math.floor(then / 1000),
-			trip: tripDescriptor,
-			vehicle: vehicleDescriptor,
-		});
+					return {
+						...(gtfsStopTime.sequence > 1
+							? {
+									arrival: {
+										time: scheduledAt,
+									},
+								}
+							: {}),
+						...(gtfsStopTime.sequence < plausibleTrip.stopTimes.length
+							? {
+									departure: {
+										time: scheduledAt,
+									},
+								}
+							: {}),
+						...stopTimeDescriptor,
+						scheduleRelationship:
+							GtfsRealtime.transit_realtime.TripUpdate.StopTimeUpdate.ScheduleRelationship
+								.SCHEDULED,
+					};
+				}),
+				timestamp: Math.floor(then / 1000),
+				trip: tripDescriptor!,
+				vehicle: vehicleDescriptor,
+			});
+		}
 
-		const currentStop = plausibleTrip.stopTimes.find((stopTime) =>
+		const currentStop = plausibleTrip?.stopTimes.find((stopTime) =>
 			matchStopTime(
 				stopTime,
 				schedule.find((s) => s.State === "Estimated"),

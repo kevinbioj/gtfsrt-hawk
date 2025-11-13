@@ -64,3 +64,25 @@ services:
     ports:
       - "127.0.0.1:50013:3000"
     restart: unless-stopped
+
+  morlaix-producer:
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    container_name: gtfsrt-morlaix
+    environment:
+      - "CONFIGURATION_PATH=/app/configurations/morlaix.mjs"
+    ports:
+      - "127.0.0.1:50014:3000"
+    restart: unless-stopped
+
+  vitre-producer:
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    container_name: gtfsrt-vitre
+    environment:
+      - "CONFIGURATION_PATH=/app/configurations/vitre.mjs"
+    ports:
+      - "127.0.0.1:50015:3000"
+    restart: unless-stopped
