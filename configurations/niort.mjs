@@ -5,8 +5,12 @@ const configuration = {
 	hawkId: "niort",
 	refreshInterval: 30_000,
 	matchRoute: (gtfsRoute, hawkVehicle) => {
-		if (hawkVehicle.RouteNumber === "NAVC") {
+		if (hawkVehicle.RouteNumber === "NAV") {
 			return gtfsRoute.name === "NCV";
+		}
+
+		if (hawkVehicle.RouteNumber === "NAVC") {
+			return gtfsRoute.name === "NCSA";
 		}
 
 		return gtfsRoute.name === hawkVehicle.RouteNumber;
