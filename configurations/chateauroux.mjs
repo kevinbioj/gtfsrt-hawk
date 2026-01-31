@@ -1,7 +1,7 @@
 /** @type {import('../src/configuration/configuration.ts').Configuration} */
 const configuration = {
 	gtfsResourceHref:
-		"https://data.chateauroux-metropole.fr/api/v2/catalog/datasets/reseau-de-bus-urbain_horizon/alternative_exports/gtfs_20251001_zip",
+		"https://www.data.gouv.fr/api/1/datasets/r/bd5489c2-5f32-4b06-8d55-e5a6f4fd6a51",
 	hawkId: "chateauroux",
 	refreshInterval: 30_000,
 	matchRoute: (gtfsRoute, hawkVehicle) => gtfsRoute.name === hawkVehicle.RouteNumber,
