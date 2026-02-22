@@ -16,7 +16,7 @@ export async function downloadHawkVehicles(hawkId: string) {
 		{
 			headers: { "Content-Type": "application/json" },
 			method: "POST",
-			signal: AbortSignal.timeout(30_000),
+			signal: AbortSignal.timeout(10_000),
 		},
 	);
 

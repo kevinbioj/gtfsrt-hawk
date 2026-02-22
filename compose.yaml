@@ -6,6 +6,7 @@ services:
     container_name: gtfsrt-ficibus
     environment:
       - "CONFIGURATION_PATH=/app/configurations/fecamp.mjs"
+      - "TZ=Europe/Paris"
     ports:
       - "127.0.0.1:50005:3000"
     restart: unless-stopped
@@ -17,6 +18,7 @@ services:
     container_name: gtfsrt-amelys
     environment:
       - "CONFIGURATION_PATH=/app/configurations/montargis.mjs"
+      - "TZ=Europe/Paris"
     ports:
       - "127.0.0.1:50007:3000"
     restart: unless-stopped
@@ -28,6 +30,7 @@ services:
     container_name: gtfsrt-chateauroux
     environment:
       - "CONFIGURATION_PATH=/app/configurations/chateauroux.mjs"
+      - "TZ=Europe/Paris"
     ports:
       - "127.0.0.1:50010:3000"
     restart: unless-stopped
@@ -39,6 +42,7 @@ services:
     container_name: gtfsrt-niort
     environment:
       - "CONFIGURATION_PATH=/app/configurations/niort.mjs"
+      - "TZ=Europe/Paris"
     ports:
       - "127.0.0.1:50011:3000"
     restart: unless-stopped
@@ -50,6 +54,7 @@ services:
     container_name: gtfsrt-dreux
     environment:
       - "CONFIGURATION_PATH=/app/configurations/dreux.mjs"
+      - "TZ=Europe/Paris"
     ports:
       - "127.0.0.1:50012:3000"
     restart: unless-stopped
@@ -61,6 +66,7 @@ services:
     container_name: gtfsrt-vichy
     environment:
       - "CONFIGURATION_PATH=/app/configurations/vichy.mjs"
+      - "TZ=Europe/Paris"
     ports:
       - "127.0.0.1:50013:3000"
     restart: unless-stopped
@@ -72,6 +78,7 @@ services:
     container_name: gtfsrt-morlaix
     environment:
       - "CONFIGURATION_PATH=/app/configurations/morlaix.mjs"
+      - "TZ=Europe/Paris"
     ports:
       - "127.0.0.1:50014:3000"
     restart: unless-stopped
@@ -83,6 +90,7 @@ services:
     container_name: gtfsrt-vitre
     environment:
       - "CONFIGURATION_PATH=/app/configurations/vitre.mjs"
+      - "TZ=Europe/Paris"
     ports:
       - "127.0.0.1:50015:3000"
     restart: unless-stopped

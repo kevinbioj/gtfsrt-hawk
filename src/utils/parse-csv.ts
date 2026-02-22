@@ -21,7 +21,7 @@ async function readFirstBytes(path: string, size: number) {
 	return Buffer.concat(chunks);
 }
 
-export async function readCsv<T extends CsvRecord<string>>(
+export async function parseCsv<T extends CsvRecord<string>>(
 	path: string,
 	onRecord: (record: T) => void,
 	{ delimiter = ",", encoding = "utf-8" }: ReadCsvOptions = {},
@@ -32,6 +32,7 @@ export async function readCsv<T extends CsvRecord<string>>(
 		encoding,
 		start: hasBom ? 3 : 0,
 	});
+
 	return new Promise<void>((resolve, reject) => {
 		Papa.parse<T>(readStream, {
 			complete: () => resolve(),
