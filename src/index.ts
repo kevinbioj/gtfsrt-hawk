@@ -58,7 +58,7 @@ while (true) {
 		for (const vehicle of vehicles) {
 			const { Schedule: schedule } = await downloadHawkTripDetails(hawkId, vehicle.ParcNumber);
 			if (schedule === null) {
-				console.warn(`    ⛛ ${vehicle.ParcNumber}\tNo schedule information for vehicle.`);
+				console.warn(`    ${vehicle.ParcNumber}\tNo schedule information for vehicle.`);
 				continue;
 			}
 
@@ -66,11 +66,11 @@ while (true) {
 			const referenceTime = nextStops.at(0) ? Temporal.PlainTime.from(`${nextStops.at(0)!.Schedule}:00`) : null;
 
 			if (referenceTime === null) {
-				console.warn(`    ⛛ ${vehicle.ParcNumber}\tFailed to compute reference time.`);
+				console.warn(`    ${vehicle.ParcNumber}\tFailed to compute reference time.`);
 				continue;
 			}
 
-			const plausibleTrip = gtfsResource.operatingTrips
+			const trip = gtfsResource.operatingTrips
 				.filter((trip) => {
 					if (!matchRoute(trip.route, vehicle, schedule)) {
 						return false;
@@ -102,28 +102,24 @@ while (true) {
 				})
 				.at(0);
 
-			if (plausibleTrip === undefined) {
-				console.warn(`    ⛛ ${vehicle.ParcNumber}\tFailed to find trip, publishing as non-commercial.`);
-			}
-
-			const tripDescriptor: GtfsRealtime.transit_realtime.ITripDescriptor | undefined = plausibleTrip
+			const tripDescriptor = trip
 				? {
-						tripId: plausibleTrip.id,
-						routeId: plausibleTrip.route.id,
-						directionId: plausibleTrip.directionId,
+						tripId: trip.id,
+						routeId: trip.route.id,
+						directionId: trip.directionId,
 						scheduleRelationship: GtfsRealtime.transit_realtime.TripDescriptor.ScheduleRelationship.SCHEDULED,
 					}
 				: undefined;
 
-			const vehicleDescriptor: GtfsRealtime.transit_realtime.IVehicleDescriptor = {
+			const vehicleDescriptor = {
 				id: vehicle.ParcNumber,
 				label: vehicle.DestinationName,
 			};
 
-			if (plausibleTrip !== undefined) {
-				store.tripUpdates.set(plausibleTrip.id, {
+			if (trip !== undefined) {
+				store.tripUpdates.set(trip.id, {
 					stopTimeUpdate: schedule.flatMap((nextStop) => {
-						const gtfsStopTime = plausibleTrip.stopTimes.find((stopTime) => matchStopTime(stopTime, nextStop));
+						const gtfsStopTime = trip.stopTimes.find((stopTime) => matchStopTime(stopTime, nextStop));
 
 						if (gtfsStopTime === undefined) {
 							return [];
@@ -147,7 +143,7 @@ while (true) {
 										},
 									}
 								: {}),
-							...(gtfsStopTime.sequence < plausibleTrip.stopTimes.length
+							...(gtfsStopTime.sequence < trip.stopTimes.length
 								? {
 										departure: {
 											time: scheduledAt,
@@ -165,7 +161,7 @@ while (true) {
 				});
 			}
 
-			const currentStop = plausibleTrip?.stopTimes.find((stopTime) =>
+			const currentStop = trip?.stopTimes.find((stopTime) =>
 				matchStopTime(
 					stopTime,
 					schedule.find((s) => s.State === "Estimated"),
@@ -188,9 +184,13 @@ while (true) {
 				vehicle: vehicleDescriptor,
 			});
 
-			console.log(
-				`    ⛛ ${vehicle.ParcNumber}\t${tripDescriptor?.routeId} ${tripDescriptor?.directionId} (${tripDescriptor?.tripId})`,
-			);
+			if (trip === undefined) {
+				console.warn(`    ${vehicle.ParcNumber}\tFailed to find trip, publishing as non-commercial.`);
+			} else {
+				console.log(
+					`    ${vehicle.ParcNumber}\t${trip.route.name} ${trip.directionId} > ${vehicle.DestinationName} (${trip.id})`,
+				);
+			}
 		}
 	} catch (cause) {
 		error = cause;

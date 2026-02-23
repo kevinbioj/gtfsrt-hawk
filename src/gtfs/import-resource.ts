@@ -1,9 +1,9 @@
+import { access, constants } from "node:fs/promises";
 import { join } from "node:path";
 import { Temporal } from "temporal-polyfill";
 
 import { parseCsv } from "../utils/parse-csv.js";
 import { getPlainTime } from "../utils/temporal-cache.js";
-import { access, constants } from "node:fs/promises";
 
 export async function importResource(directory: string) {
 	const routes = await importRoutes(directory);
@@ -137,9 +137,9 @@ async function importServices(directory: string) {
 
 // --- importStops
 
-type StopRecord = { stop_id: string; stop_name: string; location_type: "0" | string };
+type StopRecord = { stop_id: string; stop_code: string; stop_name: string; location_type: "0" | string };
 
-type Stop = { id: string; name: string };
+type Stop = { id: string; code?: string; name: string };
 
 async function importStops(directory: string) {
 	const stops = new Map<string, Stop>();
@@ -152,6 +152,7 @@ async function importStops(directory: string) {
 
 		stops.set(stopRecord.stop_id, {
 			id: stopRecord.stop_id,
+			code: stopRecord.stop_code ?? undefined,
 			name: stopRecord.stop_name,
 		});
 	});
