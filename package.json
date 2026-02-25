@@ -19,18 +19,16 @@
 		"@types/decompress": "^4.2.7",
 		"@types/node": "^25.3.0",
 		"@types/papaparse": "^5.5.2",
-		"decompress": "^4.2.1",
 		"tsx": "^4.21.0",
 		"typescript": "^5.9.3"
 	},
 	"dependencies": {
 		"@hono/node-server": "^1.19.9",
 		"croner": "^10.0.1",
-		"dayjs": "^1.11.19",
+		"decompress": "^4.2.1",
 		"gtfs-realtime-bindings": "^1.1.1",
 		"hono": "^4.12.2",
 		"papaparse": "^5.5.3",
-		"protobufjs": "^8.0.0",
 		"temporal-polyfill": "^0.3.0"
 	}
 }

@@ -14,9 +14,9 @@ importers:
       croner:
         specifier: ^10.0.1
         version: 10.0.1
-      dayjs:
-        specifier: ^1.11.19
-        version: 1.11.19
+      decompress:
+        specifier: ^4.2.1
+        version: 4.2.1
       gtfs-realtime-bindings:
         specifier: ^1.1.1
         version: 1.1.1
@@ -26,9 +26,6 @@ importers:
       papaparse:
         specifier: ^5.5.3
         version: 5.5.3
-      protobufjs:
-        specifier: ^8.0.0
-        version: 8.0.0
       temporal-polyfill:
         specifier: ^0.3.0
         version: 0.3.0
@@ -45,9 +42,6 @@ importers:
       '@types/papaparse':
         specifier: ^5.5.2
         version: 5.5.2
-      decompress:
-        specifier: ^4.2.1
-        version: 4.2.1
       tsx:
         specifier: ^4.21.0
         version: 4.21.0
@@ -433,9 +427,6 @@ packages:
     resolution: {integrity: sha512-ixNtAJndqh173VQ4KodSdJEI6nuioBWI0V1ITNKhZZsO0pEMoDxz539T4FTTbSZ/xIOSuDnzxLVRqBVSvPNE2g==}
     engines: {node: '>=18.0'}
 
-  dayjs@1.11.19:
-    resolution: {integrity: sha512-t5EcLVS6QPBNqM2z8fakk/NKel+Xzshgt8FFKAn+qwlD1pzZWxh0nVCrvFK7ZDb6XucZeF9z8C7CBWTRIVApAw==}
-
   decompress-tar@4.1.1:
     resolution: {integrity: sha512-JdJMaCrGpB5fESVyxwpCx4Jdj2AagLmv3y58Qy4GE6HMVjWz1FeVQk1Ct4Kye7PftcdOo/7U7UKzYBJgqnGeUQ==}
     engines: {node: '>=4'}
@@ -760,10 +751,6 @@ packages:
 
   protobufjs@7.5.4:
     resolution: {integrity: sha512-CvexbZtbov6jW2eXAvLukXjXUW1TzFaivC46BpWc/3BpcCysb5Vffu+B3XHMm8lVEuy2Mm4XGex8hBSg1yapPg==}
-    engines: {node: '>=12.0.0'}
-
-  protobufjs@8.0.0:
-    resolution: {integrity: sha512-jx6+sE9h/UryaCZhsJWbJtTEy47yXoGNYI4z8ZaRncM0zBKeRqjO2JEcOUYwrYGb1WLhXM1FfMzW3annvFv0rw==}
     engines: {node: '>=12.0.0'}
 
   punycode.js@2.3.1:
@@ -1161,8 +1148,6 @@ snapshots:
 
   croner@10.0.1: {}
 
-  dayjs@1.11.19: {}
-
   decompress-tar@4.1.1:
     dependencies:
       file-type: 5.2.0
@@ -1516,21 +1501,6 @@ snapshots:
       uglify-js: 3.19.3
 
   protobufjs@7.5.4:
-    dependencies:
-      '@protobufjs/aspromise': 1.1.2
-      '@protobufjs/base64': 1.1.2
-      '@protobufjs/codegen': 2.0.4
-      '@protobufjs/eventemitter': 1.1.0
-      '@protobufjs/fetch': 1.1.0
-      '@protobufjs/float': 1.0.2
-      '@protobufjs/inquire': 1.1.0
-      '@protobufjs/path': 1.1.2
-      '@protobufjs/pool': 1.1.0
-      '@protobufjs/utf8': 1.1.0
-      '@types/node': 25.3.0
-      long: 5.3.2
-
-  protobufjs@8.0.0:
     dependencies:
       '@protobufjs/aspromise': 1.1.2
       '@protobufjs/base64': 1.1.2
