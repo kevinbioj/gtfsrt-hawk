@@ -10,7 +10,7 @@ importers:
     dependencies:
       '@hono/node-server':
         specifier: ^1.19.9
-        version: 1.19.9(hono@4.12.1)
+        version: 1.19.9(hono@4.12.2)
       croner:
         specifier: ^10.0.1
         version: 10.0.1
@@ -21,8 +21,8 @@ importers:
         specifier: ^1.1.1
         version: 1.1.1
       hono:
-        specifier: ^4.12.1
-        version: 4.12.1
+        specifier: ^4.12.2
+        version: 4.12.2
       papaparse:
         specifier: ^5.5.3
         version: 5.5.3
@@ -610,8 +610,8 @@ packages:
     resolution: {integrity: sha512-0hJU9SCPvmMzIBdZFqNPXWa6dqh7WdH0cII9y+CyS8rG3nL48Bclra9HmKhVVUHyPWNH5Y7xDwAB7bfgSjkUMQ==}
     engines: {node: '>= 0.4'}
 
-  hono@4.12.1:
-    resolution: {integrity: sha512-hi9afu8g0lfJVLolxElAZGANCTTl6bewIdsRNhaywfP9K8BPf++F2z6OLrYGIinUwpRKzbZHMhPwvc0ZEpAwGw==}
+  hono@4.12.2:
+    resolution: {integrity: sha512-gJnaDHXKDayjt8ue0n8Gs0A007yKXj4Xzb8+cNjZeYsSzzwKc0Lr+OZgYwVfB0pHfUs17EPoLvrOsEaJ9mj+Tg==}
     engines: {node: '>=16.9.0'}
 
   ieee754@1.2.1:
@@ -695,8 +695,8 @@ packages:
   mdurl@2.0.0:
     resolution: {integrity: sha512-Lf+9+2r+Tdp5wXDXC4PcIBjTDtq4UKjCPMQhKIuzpJNW0b96kVqSwW0bT7FhRSfmAiFYgP+SCRvdrDozfh0U5w==}
 
-  minimatch@5.1.7:
-    resolution: {integrity: sha512-FjiwU9HaHW6YB3H4a1sFudnv93lvydNjz2lmyUXR6IwKhGI+bgL3SOZrBGn6kvvX2pJvhEkGSGjyTHN47O4rqA==}
+  minimatch@5.1.9:
+    resolution: {integrity: sha512-7o1wEA2RyMP7Iu7GNba9vc0RWWGACJOCZBJX2GJWip0ikV+wcOsgVuY9uE8CPiyQhkGFSlhuSkZPavN7u1c2Fw==}
     engines: {node: '>=10'}
 
   minimist@1.2.8:
@@ -1024,9 +1024,9 @@ snapshots:
   '@esbuild/win32-x64@0.27.3':
     optional: true
 
-  '@hono/node-server@1.19.9(hono@4.12.1)':
+  '@hono/node-server@1.19.9(hono@4.12.2)':
     dependencies:
-      hono: 4.12.1
+      hono: 4.12.2
 
   '@jsdoc/salty@0.2.10':
     dependencies:
@@ -1342,7 +1342,7 @@ snapshots:
       fs.realpath: 1.0.0
       inflight: 1.0.6
       inherits: 2.0.4
-      minimatch: 5.1.7
+      minimatch: 5.1.9
       once: 1.4.0
 
   gopd@1.2.0: {}
@@ -1370,7 +1370,7 @@ snapshots:
     dependencies:
       function-bind: 1.1.2
 
-  hono@4.12.1: {}
+  hono@4.12.2: {}
 
   ieee754@1.2.1: {}
 
@@ -1458,7 +1458,7 @@ snapshots:
 
   mdurl@2.0.0: {}
 
-  minimatch@5.1.7:
+  minimatch@5.1.9:
     dependencies:
       brace-expansion: 2.0.2
 
