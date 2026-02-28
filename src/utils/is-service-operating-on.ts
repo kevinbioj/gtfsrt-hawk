@@ -32,7 +32,7 @@ export function isServiceOperatingOn(service: Service, date: Temporal.PlainDate)
 		return false;
 	}
 
-	const workingOnDay = service.days[date.dayOfWeek];
+	const workingOnDay = service.days[date.dayOfWeek - 1];
 	cache.set(service.id, { date, operating: workingOnDay });
 	return workingOnDay;
 }
