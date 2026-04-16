@@ -9,7 +9,7 @@ export const resetServiceOperationCache = () => cache.clear();
 export function isServiceOperatingOn(service: Service, date: Temporal.PlainDate) {
 	const cached = cache.get(service.id);
 	if (cached?.date.equals(date)) {
-		return cached;
+		return cached.operating;
 	}
 
 	cache.delete(service.id);
