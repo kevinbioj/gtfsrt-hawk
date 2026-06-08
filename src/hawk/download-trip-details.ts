@@ -11,15 +11,12 @@ export type HawkTripDetails = {
 };
 
 export async function downloadHawkTripDetails(hawkId: string, parcNumber: string) {
-	const response = await fetch(
-		`${API_URL}/${hawkId}/public/HawkWebService.asmx/GetGoogleRouteInfo`,
-		{
-			body: JSON.stringify({ ParcNumber: parcNumber }),
-			headers: { "Content-Type": "application/json" },
-			method: "POST",
-			signal: AbortSignal.timeout(10_000),
-		},
-	);
+	const response = await fetch(`${API_URL}/${hawkId}/public/HawkWebService.asmx/GetGoogleRouteInfo`, {
+		body: JSON.stringify({ ParcNumber: parcNumber }),
+		headers: { "Content-Type": "application/json" },
+		method: "POST",
+		signal: AbortSignal.timeout(10_000),
+	});
 
 	if (!response.ok) {
 		throw new Error(`Failed to download vehicles from Hawk (${response.status}).`);

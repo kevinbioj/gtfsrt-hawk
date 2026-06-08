@@ -1,7 +1,6 @@
 /** @type {import('../src/configuration/configuration.ts').Configuration} */
 const configuration = {
-	gtfsResourceHref:
-		"https://www.data.gouv.fr/api/1/datasets/r/282974b2-bf13-41f2-a0bf-feb0682e594e",
+	gtfsResourceHref: "https://www.data.gouv.fr/api/1/datasets/r/282974b2-bf13-41f2-a0bf-feb0682e594e",
 	hawkId: "vitre",
 	refreshInterval: 30_000,
 	matchRoute: (gtfsRoute, hawkVehicle) =>

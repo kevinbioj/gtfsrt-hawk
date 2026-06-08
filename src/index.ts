@@ -3,7 +3,6 @@ import { serve } from "@hono/node-server";
 import GtfsRealtime from "gtfs-realtime-bindings";
 import { Hono } from "hono";
 import { rateLimiter } from "hono-rate-limiter";
-import { Temporal } from "temporal-polyfill";
 
 import { PORT } from "./config.js";
 import { loadConfiguration } from "./configuration/load-configuration.js";

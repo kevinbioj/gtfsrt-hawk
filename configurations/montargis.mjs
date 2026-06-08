@@ -29,15 +29,12 @@ const hawkRouteToGtfsRoute = new Map([
 
 /** @type {import('../src/configuration/configuration.ts').Configuration} */
 const configuration = {
-	gtfsResourceHref:
-		"https://www.data.gouv.fr/api/1/datasets/r/39240e80-d3f4-4702-ba93-520fae414649",
+	gtfsResourceHref: "https://www.data.gouv.fr/api/1/datasets/r/39240e80-d3f4-4702-ba93-520fae414649",
 	hawkId: "montargis",
 	refreshInterval: 30_000,
 	matchRoute: (gtfsRoute, hawkVehicle) =>
-		gtfsRoute.id === hawkRouteToGtfsRoute.get(hawkVehicle.RouteNumber) ||
-		gtfsRoute.id === hawkVehicle.RouteNumber,
-	matchStopTime: (gtfsStopTime, hawkSchedule) =>
-		gtfsStopTime.stop.id === hawkSchedule?.StopGraphKey,
+		gtfsRoute.id === hawkRouteToGtfsRoute.get(hawkVehicle.RouteNumber) || gtfsRoute.id === hawkVehicle.RouteNumber,
+	matchStopTime: (gtfsStopTime, hawkSchedule) => gtfsStopTime.stop.id === hawkSchedule?.StopGraphKey,
 };
 
 export default configuration;

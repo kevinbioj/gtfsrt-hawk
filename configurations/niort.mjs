@@ -15,8 +15,7 @@ const configuration = {
 
 		return gtfsRoute.name === hawkVehicle.RouteNumber;
 	},
-	matchStopTime: (gtfsStopTime, hawkSchedule) =>
-		gtfsStopTime.stop.code === hawkSchedule?.StopGraphKey,
+	matchStopTime: (gtfsStopTime, hawkSchedule) => gtfsStopTime.stop.code === hawkSchedule?.StopGraphKey,
 };
 
 export default configuration;

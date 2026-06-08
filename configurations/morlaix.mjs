@@ -4,8 +4,7 @@ const configuration = {
 	hawkId: "morlaix",
 	refreshInterval: 30_000,
 	matchRoute: (gtfsRoute, hawkVehicle) => gtfsRoute.name === hawkVehicle.RouteNumber,
-	matchStopTime: (gtfsStopTime, hawkSchedule) =>
-		gtfsStopTime.stop.id === `LINEOTIM:${hawkSchedule?.StopGraphKey}`,
+	matchStopTime: (gtfsStopTime, hawkSchedule) => gtfsStopTime.stop.id === `LINEOTIM:${hawkSchedule?.StopGraphKey}`,
 };
 
 export default configuration;
