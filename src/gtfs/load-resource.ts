@@ -74,7 +74,7 @@ export async function useGtfsResource(resourceUrl: string) {
 async function loadResource(resourceUrl: string) {
 	console.log(`➔ Loading GTFS resource at '${resourceUrl}'.`);
 
-	const workingDirectory = await mkdtemp(join(tmpdir(), "gtfsrt-lia_"));
+	const workingDirectory = await mkdtemp(join(tmpdir(), "gtfsrt-hawk_"));
 	console.log(`    ⛛ Generated working directory at '${workingDirectory}'.`);
 
 	try {
