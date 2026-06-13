@@ -1,6 +1,6 @@
 /** @type {import('../src/configuration/configuration.ts').Configuration} */
 const configuration = {
-	gtfsResourceHref: "https://api.atm.cityway.fr/dataflow/offre-tc/download?provider=FICIBUS&dataFormat=GTFS",
+	gtfsResourceHref: "https://gtfs.bus-tracker.fr/ficibus.zip",
 	hawkId: "fecamp",
 	refreshInterval: 30_000,
 	matchRoute: (gtfsRoute, hawkVehicle) =>
