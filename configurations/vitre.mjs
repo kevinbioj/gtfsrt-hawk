@@ -131,6 +131,41 @@ const hawkRouteToGtfsRoute = new Map([
 	["3932", "18H-32"],
 ]);
 
+// Arrêts du GTFS vers les StopGraphKey du SAEIV, lorsqu'ils diffèrent : sur les lignes 10, 11, 12 et 14, le GTFS
+// source dédouble certains arrêts pour la direction 1, alors que le SAEIV utilise l'arrêt de la direction 0.
+const gtfsStopToHawkStop = new Map([
+	// 10
+	["ARGE44", "ARGEN1"],
+	["ARGE45", "ARGENT"],
+	["DOMA48", "DOMALA"],
+	["ETRE26", "ETREL2"],
+	["LA_G15", "LA_GU2"],
+	["LA_G17", "LA_GUE"],
+	["MOUT11", "MOUTIE"],
+	["RANN16", "RANNEE"],
+	["VITR22", "VITRE1"],
+	// 10, 11
+	["LA_G16", "LA_GU1"],
+	// 11
+	["BAIS30", "BAIS_"],
+	["DOMA49", "DOMAL2"],
+	["DOMA50", "DOMAL1"],
+	["LA_G18", "LA_GU3"],
+	["LOUV11", "LOUVI1"],
+	["LOUV12", "LOUVIG"],
+	["VITR23", "VITRE2"],
+	// 12
+	["MONT19", "MONTRE"],
+	["VAL_42", "VAL_D_"],
+	["VAL_43", "VAL_D1"],
+	["VITR24", "VITRE3"],
+	// 14
+	["ERBR16", "ERBREE"],
+	["LE_P26", "LE_PER"],
+	["MONDE8", "MONDEV"],
+	["VITR25", "VITRE4"],
+]);
+
 /** @type {import('../src/configuration/configuration.ts').Configuration} */
 const configuration = {
 	gtfsResourceHref: "https://gtfs.bus-tracker.fr/vitre.zip",
@@ -138,7 +173,8 @@ const configuration = {
 	refreshInterval: 30_000,
 	matchRoute: (gtfsRoute, hawkVehicle) =>
 		gtfsRoute.id === (hawkRouteToGtfsRoute.get(hawkVehicle.RouteNumber) ?? hawkVehicle.RouteNumber),
-	matchStopTime: (gtfsStopTime, hawkSchedule) => gtfsStopTime.stop.id === hawkSchedule.StopGraphKey,
+	matchStopTime: (gtfsStopTime, hawkSchedule) =>
+		(gtfsStopToHawkStop.get(gtfsStopTime.stop.id) ?? gtfsStopTime.stop.id) === hawkSchedule?.StopGraphKey,
 };
 
 export default configuration;
