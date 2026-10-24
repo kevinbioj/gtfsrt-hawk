@@ -8,7 +8,8 @@ export async function importResource(directory: string) {
 	const routes = await importRoutes(directory);
 	const services = await importServices(directory);
 	const stops = await importStops(directory);
-	const trips = await importTrips(directory, routes, services, stops);
+	const stopAliases = await importStopAliases(directory);
+	const trips = await importTrips(directory, routes, services, stops, stopAliases);
 	return { services, trips };
 }
 
@@ -155,13 +156,92 @@ async function importStops(directory: string) {
 	return stops;
 }
 
+// --- importStopAliases
+
+type MergedStopRecord = { stop_id: string; merged_into_stop_id: string };
+
+type SplitStopRecord = { source_stop_id: string; route_id: string; route_direction: string; dest_stop_id: string };
+
+/**
+ * Stop ids of the source GTFS that a processed GTFS replaced (gtfs-astuce, gtfs-vitre), as the realtime source still
+ * uses them:
+ * - `merged_stops.txt`: a merged stop is replaced by the kept one;
+ * - `split_stops.txt`: a source stop is replaced, for a given route and direction, by `dest_stop_id`.
+ */
+type StopAliases = {
+	/** Kept stop id → merged stop ids. */
+	merged: Map<string, Set<string>>;
+	/** `stopId|routeId|directionId` → source stop ids. */
+	split: Map<string, Set<string>>;
+	/** `stopId|routeId|directionId` of the source stops listed in `split_stops.txt`. */
+	splitSources: Set<string>;
+};
+
+const routeDirectionKey = (stopId: string, routeId: string, directionId: number | string) =>
+	`${stopId}|${routeId}|${directionId}`;
+
+async function readableFile(directory: string, name: string) {
+	const path = join(directory, name);
+	return access(path, constants.R_OK)
+		.then(() => path)
+		.catch(() => undefined);
+}
+
+async function importStopAliases(directory: string) {
+	const aliases: StopAliases = { merged: new Map(), split: new Map(), splitSources: new Set() };
+
+	const mergedStopsPath = await readableFile(directory, "merged_stops.txt");
+	if (mergedStopsPath !== undefined) {
+		await parseCsv<MergedStopRecord>(mergedStopsPath, (mergedStopRecord) => {
+			const merged = aliases.merged.get(mergedStopRecord.merged_into_stop_id) ?? new Set();
+			merged.add(mergedStopRecord.stop_id);
+			aliases.merged.set(mergedStopRecord.merged_into_stop_id, merged);
+		});
+	}
+
+	const splitStopsPath = await readableFile(directory, "split_stops.txt");
+	if (splitStopsPath !== undefined) {
+		await parseCsv<SplitStopRecord>(splitStopsPath, (splitStopRecord) => {
+			const { source_stop_id, route_id, route_direction, dest_stop_id } = splitStopRecord;
+			aliases.splitSources.add(routeDirectionKey(source_stop_id, route_id, route_direction));
+
+			const key = routeDirectionKey(dest_stop_id, route_id, route_direction);
+			const split = aliases.split.get(key) ?? new Set();
+			split.add(source_stop_id);
+			aliases.split.set(key, split);
+		});
+	}
+
+	return aliases;
+}
+
+/** Source stop ids designating a stop on a route and direction: the stop itself and the stops it replaced. */
+function getSourceStopIds(aliases: StopAliases, stopId: string, routeId: string, directionId: number) {
+	const sourceStopIds = new Set([stopId]);
+	// A merged stop listed in split_stops.txt for this route and direction is replaced by its split stop instead
+	for (const merged of aliases.merged.get(stopId) ?? []) {
+		if (!aliases.splitSources.has(routeDirectionKey(merged, routeId, directionId))) sourceStopIds.add(merged);
+	}
+	for (const split of aliases.split.get(routeDirectionKey(stopId, routeId, directionId)) ?? []) {
+		sourceStopIds.add(split);
+	}
+	return sourceStopIds;
+}
+
 // --- importTrips
 
 type TripRecord = { trip_id: string; service_id: string; route_id: string; direction_id: "0" | "1" };
 
 type StopTimeRecord = { trip_id: string; stop_sequence: string; stop_id: string; departure_time: string };
 
-export type StopTime = { sequence: number; stop: Stop; time: Temporal.PlainTime; dayShift?: number };
+export type StopTime = {
+	sequence: number;
+	stop: Stop;
+	/** Stop ids of the source GTFS designating this stop on the trip's route and direction (see `StopAliases`). */
+	sourceStopIds: ReadonlySet<string>;
+	time: Temporal.PlainTime;
+	dayShift?: number;
+};
 
 export type Trip = { id: string; service: Service; route: Route; directionId: number; stopTimes: StopTime[] };
 
@@ -170,8 +250,11 @@ async function importTrips(
 	routes: Map<string, Route>,
 	services: Map<string, Service>,
 	stops: Map<string, Stop>,
+	stopAliases: StopAliases,
 ) {
 	const trips = new Map<string, Trip>();
+	// Shared between the stop times of a stop on a route and direction
+	const sourceStopIdsCache = new Map<string, ReadonlySet<string>>();
 
 	const tripsPath = join(directory, "trips.txt");
 	await parseCsv<TripRecord>(tripsPath, (tripRecord) => {
@@ -206,12 +289,20 @@ async function importTrips(
 			return;
 		}
 
+		const sourceStopIdsKey = routeDirectionKey(stop.id, trip.route.id, trip.directionId);
+		let sourceStopIds = sourceStopIdsCache.get(sourceStopIdsKey);
+		if (sourceStopIds === undefined) {
+			sourceStopIds = getSourceStopIds(stopAliases, stop.id, trip.route.id, trip.directionId);
+			sourceStopIdsCache.set(sourceStopIdsKey, sourceStopIds);
+		}
+
 		const [hour, minute, second] = stopTimeRecord.departure_time.split(":").map(Number);
 		const dayShift = hour % 24;
 
 		trip.stopTimes.push({
 			sequence: +stopTimeRecord.stop_sequence,
 			stop,
+			sourceStopIds,
 			time: getPlainTime(
 				`${String(hour % 24).padStart(2, "0")}:${String(minute).padStart(2, "0")}:${String(second).padStart(2, "0")}`,
 			),
